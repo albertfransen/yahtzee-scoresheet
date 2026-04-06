@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎲 Yahtzee Scoreblad</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: #f0c040;
+      text-align: center;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 8px rgba(240,192,64,0.4);
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .controls label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    select {
+      background: #16213e;
+      color: #eee;
+      border: 1px solid #f0c040;
+      border-radius: 6px;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .btn-new {
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-new:active { opacity: 0.8; }
+
+    .winner {
+      background: linear-gradient(90deg, #f0c040, #e94560);
+      color: #1a1a2e;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-align: center;
+      padding: 0.7rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.8} }
+
+    .table-wrap { overflow-x: auto; border-radius: 10px; }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #16213e;
+      min-width: 320px;
+    }
+
+    th, td {
+      padding: 0.4rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    th {
+      background: #0f3460;
+      font-size: 0.85rem;
+    }
+
+    .lbl {
+      text-align: left;
+      font-size: 0.85rem;
+      color: #cce;
+      min-width: 130px;
+    }
+
+    .sec td {
+      background: #0f3460;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #f0c040;
+      text-align: left;
+    }
+
+    .sub td { background: #1e2d50; font-weight: 600; font-size: 0.85rem; }
+    .bonus-row td { color: #6dce8d; }
+
+    .grand td {
+      background: #0f3460;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #f0c040;
+      border-top: 2px solid #f0c040;
+    }
+
+    input[type=number] {
+      width: 58px;
+      background: #0d1b35;
+      color: #eee;
+      border: 1.5px solid #2a4070;
+      border-radius: 6px;
+      padding: 0.3rem;
+      text-align: center;
+      font-size: 0.9rem;
+      -moz-appearance: textfield;
+    }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number]:focus { outline: none; border-color: #f0c040; }
+    input[type=number].filled { border-color: #4a90d9; background: #0e2240; }
+    input[type=number].fixed { cursor: pointer; border-style: dashed; color: #aaa; }
+    input[type=number].fixed.filled { color: #6dce8d; border-color: #6dce8d; border-style: solid; }
+
+    .tot {
+      display: inline-block;
+      background: #0d1b35;
+      border-radius: 6px;
+      padding: 0.3rem 0.5rem;
+      min-width: 50px;
+      font-weight: 700;
+    }
+
+    .ybonus {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+    .ybonus button {
+      background: #0f3460;
+      color: #f0c040;
+      border: 1px solid #f0c040;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ybonus button:active { background: #f0c040; color: #1a1a2e; }
+
+    .name-inp {
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid #4a90d9;
+      color: #eee;
+      text-align: center;
+      font-size: 0.85rem;
+      width: 80px;
+      padding: 0.1rem;
+      outline: none;
+    }
+
+    .hint {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #778;
+      margin-top: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎲 Yahtzee Scoreblad</h1>
+
+<div class="controls">
+  <label>
+    Spelers:
+    <select id="numPlayers" onchange="init()">
+      <option>1</option>
+      <option selected>2</option>
+      <option>3</option>
+      <option>4</option>
+    </select>
+  </label>
+  <button class="btn-new" onclick="newGame()">Nieuw Spel</button>
+</div>
+
+<div id="winner" class="winner" style="display:none"></div>
+
+<div class="table-wrap">
+  <table id="sheet"></table>
+</div>
+
+<p class="hint">Tip: klik op Full House / Straten / Yahtzee om de vaste score in/uit te vullen.</p>
+
+<script>
+const UPPER = [
+  { key:'ones',   label:'Enen',         desc:'Som van alle 1-en' },
+  { key:'twos',   label:'Tweeën',       desc:'Som van alle 2-en' },
+  { key:'threes', label:'Drieën',       desc:'Som van alle 3-en' },
+  { key:'fours',  label:'Vieren',       desc:'Som van alle 4-en' },
+  { key:'fives',  label:'Vijven',       desc:'Som van alle 5-en' },
+  { key:'sixes',  label:'Zessen',       desc:'Som van alle 6-en' },
+];
+const LOWER = [
+  { key:'three',  label:'Drie dezelfden', desc:'Som van alle dobbelstenen' },
+  { key:'four',   label:'Vier dezelfden', desc:'Som van alle dobbelstenen' },
+  { key:'fh',     label:'Full House',     desc:'25 punten', fixed:25 },
+  { key:'ss',     label:'Kleine Straat',  desc:'30 punten', fixed:30 },
+  { key:'ls',     label:'Grote Straat',   desc:'40 punten', fixed:40 },
+  { key:'yah',    label:'Yahtzee',        desc:'50 punten', fixed:50 },
+  { key:'chance', label:'Kans',           desc:'Som van alle dobbelstenen' },
+];
+const BONUS_AT = 63, BONUS_VAL = 35;
+
+let scores = [], names = [], n = 2;
+
+function emptyScore() {
+  const s = {};
+  [...UPPER,...LOWER].forEach(r => s[r.key] = null);
+  s.ybonus = 0;
+  return s;
+}
+
+function num(v) { return v === null ? 0 : (parseInt(v) || 0); }
+
+function upperTotal(s)  { return UPPER.reduce((t,r) => t + num(s[r.key]), 0); }
+function upperBonus(s)  { return upperTotal(s) >= BONUS_AT ? BONUS_VAL : 0; }
+function lowerTotal(s)  { return LOWER.reduce((t,r) => t + num(s[r.key]), 0) + s.ybonus * 100; }
+function grandTotal(s)  { return upperTotal(s) + upperBonus(s) + lowerTotal(s); }
+
+function init() {
+  n = parseInt(document.getElementById('numPlayers').value);
+  while (scores.length < n) { scores.push(emptyScore()); names.push('Speler '+(scores.length)); }
+  render();
+}
+
+function newGame() {
+  scores = Array.from({length:n}, emptyScore);
+  render();
+}
+
+function setScore(pi, key, val) {
+  scores[pi][key] = val === '' ? null : parseInt(val);
+  render();
+}
+
+function toggleFixed(pi, key, val) {
+  scores[pi][key] = scores[pi][key] === null ? val : null;
+  render();
+}
+
+function setYBonus(pi, delta) {
+  scores[pi].ybonus = Math.max(0, scores[pi].ybonus + delta);
+  render();
+}
+
+function setName(pi, val) {
+  names[pi] = val;
+}
+
+function allFilled() {
+  for (let i = 0; i < n; i++) {
+    const s = scores[i];
+    if ([...UPPER,...LOWER].some(r => s[r.key] === null)) return false;
+  }
+  return true;
+}
+
+function render() {
+  const t = document.getElementById('sheet');
+
+  // header
+  let html = '<thead><tr><th class="lbl">Categorie</th>';
+  for (let i = 0; i < n; i++) {
+    html += `<th><input class="name-inp" value="${names[i]}" oninput="setName(${i},this.value)" /></th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  // upper section
+  html += `<tr class="sec"><td colspan="${n+1}">Bovenvak</td></tr>`;
+  UPPER.forEach(row => {
+    html += `<tr><td class="lbl" title="${row.desc}">${row.label}</td>`;
+    for (let i = 0; i < n; i++) {
+      const v = scores[i][row.key];
+      const filled = v !== null ? 'filled' : '';
+      html += `<td><input type="number" class="${filled}" value="${v !== null ? v : ''}" min="0" max="50"
+        oninput="setScore(${i},'${row.key}',this.value)" /></td>`;
+    }
+    html += '</tr>';
+  });
+
+  // upper totals
+  html += `<tr class="sub"><td class="lbl">Bovenvak totaal</td>`;
+  for (let i = 0; i < n; i++) html += `<td><span class="tot">${upperTotal(scores[i])}</span></td>`;
+  html += '</tr>';
+
+  html += `<tr class="sub bonus-row"><td class="lbl" title="+${BONUS_VAL} bij ≥${BONUS_AT}">Bonus (+${BONUS_VAL})</td>`;
+  for (let i = 0; i < n; i++) {
+    const ut = upperTotal(scores[i]);
+    const got = upperBonus(scores[i]) > 0;
+    html += `<td><span class="tot" style="color:${got?'#6dce8d':'#eee'}">${got ? '✓ +35' : ut+'/'+BONUS_AT}</span></td>`;
+  }
+  html += '</tr>';
+
+  // lower section
+  html += `<tr class="sec"><td colspan="${n+1}">Ondervak</td></tr>`;
+  LOWER.forEach(row => {
+    html += `<tr><td class="lbl" title="${row.desc}">${row.label}</td>`;
+    for (let i = 0; i < n; i++) {
+      const v = scores[i][row.key];
+      const filled = v !== null ? 'filled' : '';
+      if (row.fixed !== undefined) {
+        html += `<td><input type="number" class="fixed ${filled}" value="${v !== null ? v : ''}" readonly
+          onclick="toggleFixed(${i},'${row.key}',${row.fixed})" /></td>`;
+      } else {
+        html += `<td><input type="number" class="${filled}" value="${v !== null ? v : ''}" min="0" max="50"
+          oninput="setScore(${i},'${row.key}',this.value)" /></td>`;
+      }
+    }
+    html += '</tr>';
+  });
+
+  // yahtzee bonus
+  html += `<tr><td class="lbl" title="100 per extra Yahtzee">Yahtzee Bonus</td>`;
+  for (let i = 0; i < n; i++) {
+    html += `<td><div class="ybonus">
+      <button onclick="setYBonus(${i},-1)">−</button>
+      <span>${scores[i].ybonus * 100}</span>
+      <button onclick="setYBonus(${i},1)">+</button>
+    </div></td>`;
+  }
+  html += '</tr>';
+
+  // lower total
+  html += `<tr class="sub"><td class="lbl">Ondervak totaal</td>`;
+  for (let i = 0; i < n; i++) html += `<td><span class="tot">${lowerTotal(scores[i])}</span></td>`;
+  html += '</tr>';
+
+  // grand total
+  html += `<tr class="grand"><td class="lbl">Eindtotaal</td>`;
+  for (let i = 0; i < n; i++) html += `<td><span class="tot">${grandTotal(scores[i])}</span></td>`;
+  html += '</tr>';
+
+  html += '</tbody>';
+  t.innerHTML = html;
+
+  // winner
+  const w = document.getElementById('winner');
+  if (allFilled()) {
+    const totals = scores.slice(0,n).map(grandTotal);
+    const max = Math.max(...totals);
+    const wi = totals.indexOf(max);
+    w.textContent = `🏆 ${names[wi]} wint met ${max} punten!`;
+    w.style.display = 'block';
+  } else {
+    w.style.display = 'none';
+  }
+}
+
+// boot
+scores = [emptyScore(), emptyScore(), emptyScore(), emptyScore()];
+names  = ['Speler 1','Speler 2','Speler 3','Speler 4'];
+render();
+</script>
+</body>
+</html>
